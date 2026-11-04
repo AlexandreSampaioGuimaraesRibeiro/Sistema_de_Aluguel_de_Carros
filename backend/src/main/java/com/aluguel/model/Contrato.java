@@ -7,5 +7,6 @@ public class Contrato {
   @OneToOne public Pedido pedido;
   @Enumerated(EnumType.STRING) public TipoPropriedade propriedade;
   @ManyToOne public Usuario bancoCredor;
+  @ManyToOne public Usuario agente;
   public BigDecimal valorCredito;
 }

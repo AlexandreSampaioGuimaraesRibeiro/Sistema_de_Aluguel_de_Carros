@@ -34,3 +34,5 @@ td button { margin-right: 6px; }
 
 .auth-card h2 { margin: 0 0 4px; text-align: center; }
 .auth-card a { text-align: center; }
+
+.contrato { background: #fff; padding: 20px; border-radius: 12px; margin-top: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }

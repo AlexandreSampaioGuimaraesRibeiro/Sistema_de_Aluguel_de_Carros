@@ -16,7 +16,8 @@ public class PedidoController {
   public PedidoController(PedidoRepo p, ClienteRepo c, AutomovelRepo a) { pedidos = p; clientes = c; autos = a; }
 
   private static boolean agente(Authentication a) {
-    return a.getAuthorities().stream().anyMatch(g -> !g.getAuthority().equals("ROLE_CLIENTE"));
+  return a.getAuthorities().stream()
+    .anyMatch(g -> g.getAuthority().equals("ROLE_EMPRESA") || g.getAuthority().equals("ROLE_BANCO"));
   }
   private Pedido buscar(Long id, Authentication a) {
     Pedido p = pedidos.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

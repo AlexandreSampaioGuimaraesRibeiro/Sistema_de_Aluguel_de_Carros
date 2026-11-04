@@ -14,5 +14,6 @@ public class Cliente {
   public String profissao;
   @Valid @Size(max = 3, message = "máximo de 3 rendimentos")
   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+  @JoinColumn(name = "cliente_id")
   public List<Rendimento> rendimentos = new ArrayList<>();
 }

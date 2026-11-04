@@ -28,3 +28,13 @@ Subsistemas: (1) gestão de pedidos e contratos = back-end Spring Boot; (2) cons
 
 ## Fluxo do pedido
 PENDENTE → (agente avalia) APROVADO | REPROVADO → (agente executa contrato) CONTRATADO. O cliente pode cancelar até CONTRATADO.
+
+## Diagrama de implantação
+```mermaid
+flowchart LR
+  C["Navegador do cliente"] -->|HTTPS| S
+  E["Navegador da empresa (agente)"] -->|HTTPS| S
+  B["Navegador do banco (agente)"] -->|HTTPS| S
+  S["Servidor central<br/>Spring Boot + React"] -->|JDBC/SSL| D[("Supabase PostgreSQL")]
+```
+Clientes e agentes acessam o servidor central pela Internet. A propriedade do automóvel e o crédito bancário ficam registrados no **contrato**.

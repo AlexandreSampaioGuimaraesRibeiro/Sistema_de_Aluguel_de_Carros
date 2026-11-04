@@ -6,21 +6,38 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-@RestController @RequestMapping("/api/contratos") @PreAuthorize("hasAnyRole('EMPRESA','BANCO')")
+
+@RestController @RequestMapping("/api/contratos")
 public class ContratoController {
   public record ContratoDto(Long pedidoId, TipoPropriedade propriedade, boolean comCredito, BigDecimal valorCredito) {}
   private final ContratoRepo contratos; private final PedidoRepo pedidos; private final UsuarioRepo usuarios;
   public ContratoController(ContratoRepo c, PedidoRepo p, UsuarioRepo u) { contratos = c; pedidos = p; usuarios = u; }
-  @GetMapping public List<Contrato> listar() { return contratos.findAll(); }
-  @PostMapping
+
+  private static boolean participa(Contrato c, String u) {
+    return u.equals(c.pedido.cliente.usuario.username)
+      || (c.agente != null && u.equals(c.agente.username))
+      || (c.bancoCredor != null && u.equals(c.bancoCredor.username));
+  }
+
+  @GetMapping public List<Contrato> meus(Authentication a) { return contratos.findDoParticipante(a.getName()); }
+
+  @GetMapping("/{id}")
+  public Contrato abrir(@PathVariable Long id, Authentication a) {
+    Contrato c = contratos.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!participa(c, a.getName())) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "você não participa deste contrato");
+    return c;
+  }
+
+  @PostMapping @Transactional @PreAuthorize("hasAnyRole('EMPRESA','BANCO')")
   public Contrato executar(@RequestBody ContratoDto d, Authentication a) {
     Pedido p = pedidos.findById(d.pedidoId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     if (p.status != StatusPedido.APROVADO) throw new ResponseStatusException(HttpStatus.CONFLICT, "apenas pedidos APROVADOS geram contrato");
-    Contrato c = new Contrato(); c.pedido = p; c.propriedade = d.propriedade();
+    Usuario u = usuarios.findByUsername(a.getName()).orElseThrow();
+    Contrato c = new Contrato(); c.pedido = p; c.propriedade = d.propriedade(); c.agente = u;
     if (d.comCredito()) {
-      Usuario u = usuarios.findByUsername(a.getName()).orElseThrow();
       if (u.papel != Papel.BANCO) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "crédito só por banco");
       c.bancoCredor = u; c.valorCredito = d.valorCredito();
     }
